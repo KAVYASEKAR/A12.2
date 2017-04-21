@@ -1,0 +1,142 @@
+1. Difference between HBASE and HDFS.
+Answer:
+a)Hadoop is essentially HDFS (Hadoop Distributed File System) and MapReduce. HDFS is meant for storing massive amounts of data across a distributed system. 
+b)HBase is a non-relational database that can run on top of Hadoop and provides you random data access/querying capabilities. HDFS, by itself has no support for reads/writes at random location.
+c)HBase stores data as key/value pairs as in a column database (something similar to Cassandra DB) while data, in HDFS is stored as flat files.
+
+2. List and explain components of HBASE.
+Answer:
+HBase architecture has 3 important components
+HMaster
+Region Server 
+ZooKeeper.
+
+HMaster
+HBase HMaster is a lightweight process that assigns regions to region servers in the Hadoop cluster for load balancing. Responsibilities of HMaster –
+Manages and Monitors the Hadoop Cluster
+Performs Administration (Interface for creating, updating and deleting tables.)
+Controlling the failover
+DDL operations are handled by the HMaster
+Whenever a client wants to change the schema and change any of the metadata operations, HMaster is responsible for all these operations.
+
+Region Server
+These are the worker nodes which handle read, write, update, and delete requests from clients. Region Server process, runs on every node in the hadoop cluster. Region Server runs on HDFS DataNode and consists of the following components –
+Block Cache – This is the read cache. Most frequently read data is stored in the read cache and whenever the block cache is full, recently used data is evicted.
+MemStore- This is the write cache and stores new data that is not yet written to the disk. Every column family in a region has a MemStore.
+Write Ahead Log (WAL) is a file that stores new data that is not persisted to permanent storage.
+HFile is the actual storage file that stores the rows as sorted key values on a disk.
+
+Zookeeper
+HBase uses ZooKeeper as a distributed coordination service for region assignments and to recover any region server crashes by loading them onto other region servers that are functioning. ZooKeeper is a centralized monitoring server that maintains configuration information and provides distributed synchronization. 
+ZooKeeper service keeps track of all the region servers that are there in an HBase cluster- tracking information about how many region servers are there and which region servers are holding which DataNode. HMaster contacts ZooKeeper to get the details of region servers. 
+
+3. When should we use HBASE, list some of the scenarios for the same.
+Answer:
+HBase is an ideal platform with ACID compliance properties making it a perfect choice for high-scale, real-time applications. 
+It does not require a fixed schema, so developers have the provision to add new data as and when required without having to conform to a predefined model.
+It provides users with database like access to Hadoop-scale storage, so developers can perform read or write on subset of data efficiently, without having to scan through the complete dataset. HBase is the best choice as a NoSQL database, when your application already has a hadoop cluster running with huge amount of data. HBase helps perform fast read/writes.
+
+4. What are the different modes in which Hbase can be run?
+Answer:
+HBase has two run modes: 
+Standalone 
+Distributed
+
+Standalone HBase
+This is the default mode.
+In standalone mode, HBase does not use HDFS, it uses the local filesystem instead and it runs all HBase daemons and a local ZooKeeper all up in the same JVM. 
+Zookeeper binds to a well known port so clients may talk to HBase.
+
+Distributed
+Distributed mode can be subdivided as pseudo-distributed and fully-distributed.
+A pseudo-distributed mode is simply a distributed mode run on a single host. This configuration is used for testing and prototyping on HBase.
+A fully-distributed mode can be run on more than one host, using the following configurations. In hbase-site.xml, add the property hbase.cluster.distributed and set it to true and point the HBase hbase.rootdir at the appropriate HDFS NameNode and location in HDFS where we would like HBase to write data.
+
+5. Why is zookeeper needed in Hbase?
+Answer:
+The purpose of Zookeeper is cluster management.
+Zookeeper is a distributed storage that provides the following guarantees:
+Sequential Consistency - Updates from a client will be applied in the order that they were sent.
+Atomicity - Updates either succeed or fail. No partial results.
+Single System Image - A client will see the same view of the service regardless of the server that it connects to.
+Reliability - Once an update has been applied, it will persist from that time forward until a client overwrites the update.
+Timeliness - The clients view of the system is guaranteed to be up-to-date within a certain time bound.
+
+6. Hbase is a schema less database, what does it mean?
+Answer:
+This means that the "schema" is stored with the record, not the table. In a RDBMS, the schema is defined and that table has the schema. In HBase (and other BigTable implementations) data is labeled with its types.
+
+7. What is the minimum number of column family every Hbase table should have?
+Answer:
+The minimum number of column family every Hbase table should have is one.
+
+8. What is the benefit of using connection pool in Hbase?
+Answer:
+For applications which require high-end multithreaded access (e.g., web-servers or application servers that may serve many application threads in a single JVM), we can use connection pooling.
+
+9. What is the difference between memstore and hfile in HBase?
+Answer:
+
+HFile
+File format for hbase. 
+A file of sorted key/value pairs. 
+Both keys and values are byte arrays.
+When the MemStore accumulates enough data, the entire sorted KeyValue set is written 
+to a new HFile in HDFS.
+This is a sequential write.It is very fast, as it avoids moving the disk drive head.
+
+Memstore
+When something is written to HBase, it is first written to an in-memory store (memstore), once this memstore reaches a certain size, it is flushed to disk into a store file (everything is also written immediately to a log file for durability). The store files created on disk are immutable. 
+
+10.Describe compactions in HBase.
+Answer:
+When something is written to HBase, it is first written to an in-memory store (memstore), once this memstore reaches a certain size, it is flushed to disk into a store file (everything is also written immediately to a log file for durability). The store files created on disk are immutable. Sometimes the store files are merged together, this is done by a process called compaction.
+There are two kinds of compactions:
+Minor compactions: these are triggered each time a memstore is flushed, and will merge some of the store files, determined by an algorithm described below.
+Major compactions: these run about every 24 hours (after the currently oldest store file was written), and merge together all store files into one. The 24 hours is adjusted with a random margin of up to 20% to avoid many major compactions happening at the same time. Major compactions can also be triggered manually, via the API or the shell.
+
+11.List and explain the logical entities in HBase.
+Answer:
+The Data Model in HBase is made of different logical entities such as Tables, Rows, Column Families, Columns, Cells and Versions.
+Tables – The HBase Tables are more like logical collection of rows stored in separate partitions called Regions.
+Rows – A row is one instance of data in a table and is identified by a rowkey.
+Column Families – Data in a row are grouped together as Column Families.
+Columns – A Column Family is made of one or more columns. A Column is identified by a Column Qualifier that consists of the Column Family name concatenated with the Column name using a colon
+Cell – A Cell stores data and is essentially a unique combination of rowkey, Column Family and the Column
+Version – The data stored in a cell is versioned and versions of data are identified by the timestamp.
+
+12.What will happen if we do not create a row key while inserting the data?
+Answer:
+HBase data stores consist of one or more tables, which are indexed by row keys. 
+Data is stored in rows with columns, and rows can have multiple versions. 
+If we do not create a row key while inserting the data storage problems occur.
+
+13.How can filters be applied in HBase and what are the benefits?
+Answer:
+It allows to perform server-side filtering when accessing HBase over Thrift or in the HBase shell.
+
+14.What are the data model operations in hBase?
+Answer:
+The Data Model in HBase is made of different logical components such as Tables, Rows, Column Families, Columns, Cells and Versions.
+Tables – The HBase Tables are more like logical collection of rows stored in separate partitions called Regions.
+Rows – A row is one instance of data in a table and is identified by a rowkey.
+Column Families – Data in a row are grouped together as Column Families.
+Columns – A Column Family is made of one or more columns. A Column is identified by a Column Qualifier that consists of the Column Family name concatenated with the Column name using a colon
+Cell – A Cell stores data and is essentially a unique combination of rowkey, Column Family and the Column
+Version – The data stored in a cell is versioned and versions of data are identified by the timestamp.
+
+15.How MapReduce can be used with HBase?
+Answer:
+HBase provides a TableInputFormat, to which you provided a table scan, that splits the rows resulting from the table scan into the regions in which those rows reside.
+The map process is passed an ImmutableBytesWritable that contains the row key for a row and a Result that contains the columns for that row.
+The map process outputs its key/value pair based on its business logic in whatever form makes sense to your application.
+The reduce process builds its results but emits the row key as an ImmutableBytesWritable and a Put command to store the results back to HBase.
+Finally, the results are stored in HBase by the HBase MapReduce infrastructure.
+
+16.What is regionserver? 
+Answer:
+These are the worker nodes which handle read, write, update, and delete requests from clients. Region Server process, runs on every node in the hadoop cluster. Region Server runs on HDFS DataNode and consists of the following components –
+Block Cache – This is the read cache. Most frequently read data is stored in the read cache and whenever the block cache is full, recently used data is evicted.
+MemStore- This is the write cache and stores new data that is not yet written to the disk. Every column family in a region has a MemStore.
+Write Ahead Log (WAL) is a file that stores new data that is not persisted to permanent storage.
+HFile is the actual storage file that stores the rows as sorted key values on a disk.
